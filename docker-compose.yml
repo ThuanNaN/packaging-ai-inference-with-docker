@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend_cont
+    volumes:
+      - ./backend/app/logs/images:/src/app/logs/images
+    networks:
+      - aio_mlops_net
+    ports:
+      - 8000:8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_cont
+    env_file:
+      - ./frontend/.env
+    networks:
+      - aio_mlops_net
+    ports:
+      - 3000:3000
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  aio_mlops_net:
+    driver: bridge
